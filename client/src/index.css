@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base corporate styling reset */
+body {
+  @apply bg-corporate-50 text-corporate-900 antialiased;
+}
