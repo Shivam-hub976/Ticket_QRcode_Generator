@@ -1,52 +1,126 @@
-# QRCore: Enterprise Ticket Management - Architecture
+# QRCore: Enterprise Ticket Management — Architecture & API Specifications
 
-## 1. Database Schema (Entity-Relationship Diagram)
+## 1. System Overview
 
-We will use a NoSQL document structure (MongoDB style), as it fits perfectly with the MERN stack.
+**QRCore** is a lightweight, responsive digital ticket management tool designed to eliminate manual paper systems and Excel-based workflows for operational floor staff.
 
-**Collection: `Tickets`**
+It provides instant QR code payload generation, strict XSS input sanitization, and graceful failure handling for unreliable 3G network environments.
 
-- `_id`: ObjectId (Primary Key, Auto-generated)
-- `ticketId`: String (Unique, e.g., "TKT-1001" - used for the QR code payload)
-- `title`: String (Required, sanitized)
-- `description`: String (Required, sanitized)
-- `priority`: String (Enum: "Low", "Medium", "High")
-- `status`: String (Enum: "Open", "In Progress", "Resolved")
-- `qrCodeUrl`: String (URL or Base64 string of the generated QR code)
-- `createdBy`: String (Staff ID or Name)
-- `createdAt`: Date (Timestamp)
-- `updatedAt`: Date (Timestamp)
+---
 
-## 2. API Contracts
+## 2. Database Schema (MongoDB / NoSQL Model)
 
-These are the endpoints the frontend will eventually communicate with.
+**Collection Name:** `Tickets`
 
-### A. Create Ticket & Generate QR
+| Field Name    | Type       | Constraints                             | Description                                                 |
+| ------------- | ---------- | --------------------------------------- | ----------------------------------------------------------- |
+| `_id`         | `ObjectId` | Primary Key, Auto-generated             | Internal database reference                                 |
+| `ticketId`    | `String`   | Unique, Required                        | Business key (e.g., `TKT-6416`) encoded into the QR payload |
+| `title`       | `String`   | Required, Sanitized                     | Brief summary of the floor issue                            |
+| `description` | `String`   | Required, Sanitized                     | Complete details of the operational issue                   |
+| `priority`    | `String`   | Enum: `Low`, `Medium`, `High`           | Escalation level for floor staff                            |
+| `status`      | `String`   | Enum: `Open`, `In Progress`, `Resolved` | Operational state of the ticket                             |
+| `createdBy`   | `String`   | Required, Sanitized                     | Staff ID or badge number of reporter                        |
+| `createdAt`   | `Date`     | Auto-generated                          | Timestamp when the ticket was created                       |
+| `updatedAt`   | `Date`     | Auto-generated                          | Timestamp when the ticket was last updated                  |
 
-- **Endpoint:** `POST /api/v1/tickets`
-- **Request Body:**
+---
 
-  ```json
-  {
-    "title": "Network Router Down",
-    "description": "Main floor router needs reboot.",
+## 3. API Contracts
+
+### A. Create Ticket & Generate QR Payload
+
+**Endpoint:** `POST /api/v1/tickets`
+
+**Headers:**
+
+```http
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "title": "Main Floor Router Down",
+  "description": "Primary router on Section B is offline after power surge.",
+  "priority": "High",
+  "createdBy": "Staff-1194"
+}
+```
+
+**Success Response — 201 Created:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "66f7d1b2e4b0a1c2d3e4f5a6",
+    "ticketId": "TKT-6416",
+    "title": "Main Floor Router Down",
+    "description": "Primary router on Section B is offline after power surge.",
     "priority": "High",
-    "createdBy": "Staff-042"
+    "status": "Open",
+    "createdBy": "Staff-1194",
+    "createdAt": "2026-09-28T10:30:00.000Z",
+    "updatedAt": "2026-09-28T10:30:00.000Z"
   }
-  ```
+}
+```
 
-- **Response (201 Created):** `Returns the complete ticket object including the newly generated qrCodeUrl.`
+---
 
-### B. Fetch All Tickets
+### B. Fetch All Tickets with Pagination & Filtering
 
-- **Endpoint:** `GET /api/v1/tickets`
+**Endpoint:** `GET /api/v1/tickets`
 
-- **Query Params:** `?status=Open&limit=20 (For handling empty states and large lists gracefully)`
+**Query Parameters:**
 
-- **Response (200 OK):** `Returns an array of ticket objects.`
+```text
+?status=Open&limit=20&page=1
+```
 
-### C. Fetch Single Ticket
+**Success Response — 200 OK:**
 
-- **Endpoint:** `GET /api/v1/tickets/:ticketId`
+```json
+{
+  "success": true,
+  "count": 1,
+  "data": [
+    {
+      "_id": "66f7d1b2e4b0a1c2d3e4f5a6",
+      "ticketId": "TKT-6416",
+      "title": "Main Floor Router Down",
+      "description": "Primary router on Section B is offline after power surge.",
+      "priority": "High",
+      "status": "Open",
+      "createdBy": "Staff-1194",
+      "createdAt": "2026-09-28T10:30:00.000Z"
+    }
+  ]
+}
+```
 
-- **Response (200 OK):** `Returns the specific ticket object.`
+---
+
+### C. Fetch Single Ticket by ID
+
+**Endpoint:** `GET /api/v1/tickets/:ticketId`
+
+**Success Response — 200 OK:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "66f7d1b2e4b0a1c2d3e4f5a6",
+    "ticketId": "TKT-6416",
+    "title": "Main Floor Router Down",
+    "description": "Primary router on Section B is offline after power surge.",
+    "priority": "High",
+    "status": "Open",
+    "createdBy": "Staff-1194",
+    "createdAt": "2026-09-28T10:30:00.000Z"
+  }
+}
+```
