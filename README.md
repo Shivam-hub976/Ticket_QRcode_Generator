@@ -10,7 +10,7 @@
 [![Vitest](https://img.shields.io/badge/Vitest-5.0.2-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)](https://vitest.dev/)
 [![License](https://img.shields.io/badge/License-Proprietary-0052CC?style=for-the-badge)](#)
 
-[Live Demo Deployment](https://ticket-q-rcode-generator.vercel.app) • [Architecture Docs](./architecture.md) • [Prompt Log](./PROMPTS.md)
+[Live Demo Deployment](https://ticket-q-rcode-generator.vercel.app) • [Architecture Docs](./architecture.md) • [Prompt Log](./Prompts.md)
 
 </div>
 
